@@ -2,6 +2,7 @@
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import edu.ucsb.cs156.example.entities.UCSBDiningCommonsMenuItem;
+import edu.ucsb.cs156.example.errors.EntityNotFoundException;
 import edu.ucsb.cs156.example.repositories.UCSBDiningCommonsMenuItemRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,8 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;UCSBDiningCommonsMenuItems&quot;)
 @RequestMapping(&quot;/api/ucsbdiningcommonsmenuitems&quot;)
 @RestController
-<span class="fc" id="L22">@Slf4j</span>
-<span class="fc" id="L23">public class UCSBDiningCommonsMenuItemController extends ApiController {</span>
+<span class="fc" id="L23">@Slf4j</span>
+<span class="fc" id="L24">public class UCSBDiningCommonsMenuItemController extends ApiController {</span>
 
   @Autowired UCSBDiningCommonsMenuItemRepository ucsbDiningCommonsMenuItemRepository;
 
@@ -33,8 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;/all&quot;)
   public Iterable&lt;UCSBDiningCommonsMenuItem&gt; allUCSBDiningCommonsMenuItems() {
-<span class="fc" id="L36">    Iterable&lt;UCSBDiningCommonsMenuItem&gt; items = ucsbDiningCommonsMenuItemRepository.findAll();</span>
-<span class="fc" id="L37">    return items;</span>
+<span class="fc" id="L37">    Iterable&lt;UCSBDiningCommonsMenuItem&gt; items = ucsbDiningCommonsMenuItemRepository.findAll();</span>
+<span class="fc" id="L38">    return items;</span>
   }
 
   /**
@@ -54,15 +55,33 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;station&quot;) @RequestParam String station)
       throws JsonProcessingException {
 
-<span class="fc" id="L57">    UCSBDiningCommonsMenuItem ucsbDiningCommonsMenuItem = new UCSBDiningCommonsMenuItem();</span>
-<span class="fc" id="L58">    ucsbDiningCommonsMenuItem.setDiningCommonsCode(diningCommonsCode);</span>
-<span class="fc" id="L59">    ucsbDiningCommonsMenuItem.setName(name);</span>
-<span class="fc" id="L60">    ucsbDiningCommonsMenuItem.setStation(station);</span>
+<span class="fc" id="L58">    UCSBDiningCommonsMenuItem ucsbDiningCommonsMenuItem = new UCSBDiningCommonsMenuItem();</span>
+<span class="fc" id="L59">    ucsbDiningCommonsMenuItem.setDiningCommonsCode(diningCommonsCode);</span>
+<span class="fc" id="L60">    ucsbDiningCommonsMenuItem.setName(name);</span>
+<span class="fc" id="L61">    ucsbDiningCommonsMenuItem.setStation(station);</span>
 
-<span class="fc" id="L62">    UCSBDiningCommonsMenuItem savedUCSBDiningCommonsMenuItem =</span>
-<span class="fc" id="L63">        ucsbDiningCommonsMenuItemRepository.save(ucsbDiningCommonsMenuItem);</span>
+<span class="fc" id="L63">    UCSBDiningCommonsMenuItem savedUCSBDiningCommonsMenuItem =</span>
+<span class="fc" id="L64">        ucsbDiningCommonsMenuItemRepository.save(ucsbDiningCommonsMenuItem);</span>
 
-<span class="fc" id="L65">    return savedUCSBDiningCommonsMenuItem;</span>
+<span class="fc" id="L66">    return savedUCSBDiningCommonsMenuItem;</span>
+  }
+
+  /**
+   * Get a single dining commons menu item by id
+   *
+   * @param id the id of the dining commons menu item
+   * @return a UCSBDiningCommonsMenuItem
+   */
+  @Operation(summary = &quot;Get a single date&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;&quot;)
+  public UCSBDiningCommonsMenuItem getById(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
+<span class="fc" id="L79">    UCSBDiningCommonsMenuItem item =</span>
+        ucsbDiningCommonsMenuItemRepository
+<span class="fc" id="L81">            .findById(id)</span>
+<span class="fc" id="L82">            .orElseThrow(() -&gt; new EntityNotFoundException(UCSBDiningCommonsMenuItem.class, id));</span>
+
+<span class="fc" id="L84">    return item;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
