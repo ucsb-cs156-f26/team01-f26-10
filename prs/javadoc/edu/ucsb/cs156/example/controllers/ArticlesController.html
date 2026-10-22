@@ -66,6 +66,7 @@ loadScripts(document, 'script');</script>
 <li><a href="#allArticles()" tabindex="0">allArticles()</a></li>
 <li><a href="#getById(java.lang.Long)" tabindex="0">getById(Long)</a></li>
 <li><a href="#postArticles(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.time.LocalDateTime)" tabindex="0">postArticles(String, String, String, String, LocalDateTime)</a></li>
+<li><a href="#updateArticles(java.lang.Long,edu.ucsb.cs156.example.entities.Articles)" tabindex="0">updateArticles(Long, Articles)</a></li>
 </ol>
 </li>
 </ol>
@@ -134,6 +135,12 @@ loadScripts(document, 'script');</script>
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/LocalDateTime.html" title="class or interface in java.time" class="external-link">LocalDateTime</a>&nbsp;dateAdded)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Create a new article.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="../entities/Articles.html" title="class in edu.ucsb.cs156.example.entities">Articles</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#updateArticles(java.lang.Long,edu.ucsb.cs156.example.entities.Articles)" class="member-name-link">updateArticles</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;id,
+ @Valid <a href="../entities/Articles.html" title="class in edu.ucsb.cs156.example.entities">Articles</a>&nbsp;incoming)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Update a single article.</div>
 </div>
 </div>
 </div>
@@ -232,6 +239,29 @@ loadScripts(document, 'script');</script>
 <dd><code>dateAdded</code> - the date and time the article was added</dd>
 <dt>Returns:</dt>
 <dd>the saved article</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="updateArticles(java.lang.Long,edu.ucsb.cs156.example.entities.Articles)">
+<h3>updateArticles</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="annotations">@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PutMapping("")
+</span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="../entities/Articles.html" title="class in edu.ucsb.cs156.example.entities">Articles</a></span>&nbsp;<span class="element-name">updateArticles</span><wbr><span class="parameters">(@RequestParam
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;id,
+ @RequestBody @Valid
+ @Valid <a href="../entities/Articles.html" title="class in edu.ucsb.cs156.example.entities">Articles</a>&nbsp;incoming)</span></div>
+<div class="block">Update a single article. Accessible only to administrators.</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>id</code> - the id of the article to update</dd>
+<dd><code>incoming</code> - the new values for the article fields</dd>
+<dt>Returns:</dt>
+<dd>the updated article</dd>
+<dt>Throws:</dt>
+<dd><code><a href="../errors/EntityNotFoundException.html" title="class in edu.ucsb.cs156.example.errors">EntityNotFoundException</a></code> - if no article has the given id</dd>
 </dl>
 </div>
 </section>
