@@ -17,6 +17,8 @@ import edu.ucsb.cs156.example.testconfig.TestConfig;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -49,6 +51,63 @@ public class ArticlesControllerTests extends ControllerTestCase {
 
     verify(articlesRepository, times(1)).findAll();
     assertEquals("[]", response.getResponse().getContentAsString());
+  }
+
+  // Tests for GET /api/Articles?id=123
+
+  @Test
+  public void logged_out_users_cannot_get_by_id() throws Exception {
+    mockMvc.perform(get("/api/Articles").param("id", "123")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_can_get_by_id_when_the_id_exists() throws Exception {
+    // arrange
+    Articles article =
+        Articles.builder()
+            .id(123L)
+            .title("Testing Spring applications")
+            .url("https://example.com/spring-testing")
+            .explanation("An introduction to Spring testing")
+            .email("student@ucsb.edu")
+            .dateAdded(LocalDateTime.parse("2026-10-21T12:00:00"))
+            .build();
+
+    when(articlesRepository.findById(eq(123L))).thenReturn(Optional.of(article));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/Articles").param("id", "123"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(articlesRepository, times(1)).findById(eq(123L));
+    String expectedJson = mapper.writeValueAsString(article);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_gets_not_found_when_the_id_does_not_exist() throws Exception {
+    // arrange
+    when(articlesRepository.findById(eq(123L))).thenReturn(Optional.empty());
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/Articles").param("id", "123"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+    verify(articlesRepository, times(1)).findById(eq(123L));
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Articles with id 123 not found", json.get("message"));
   }
 
   // Authorization tests for /api/Articles/post
