@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -104,6 +105,34 @@ public class ArticlesController extends ApiController {
     Articles savedArticles = articlesRepository.save(articles);
 
     return savedArticles;
+  }
+
+  /**
+   * Delete a single article. Accessible only to administrators.
+   *
+   * @param id the id of the article to delete
+   * @return a message indicating the record was deleted
+   * @throws EntityNotFoundException if no article has the given id
+   */
+  @Operation(
+      summary = "Delete a single article",
+      description =
+          "Deletes the article with the given id and returns a message such as record 123 deleted. "
+              + "Returns HTTP 404 with Articles with id 123 not found if it does not exist. "
+              + "Requires an administrator.")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @DeleteMapping("")
+  public Object deleteArticles(
+      @Parameter(name = "id", description = "ID of the article to delete", example = "123")
+          @RequestParam
+          Long id) {
+    Articles articles =
+        articlesRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(Articles.class, id));
+
+    articlesRepository.delete(articles);
+    return genericMessage("record %s deleted".formatted(id));
   }
 
   /**
