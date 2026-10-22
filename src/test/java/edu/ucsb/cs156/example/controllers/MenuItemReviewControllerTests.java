@@ -284,4 +284,68 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
 
     verify(menuItemReviewRepository, times(1)).findById(123L);
   }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_delete_review() throws Exception {
+
+    MenuItemReview review =
+        MenuItemReview.builder()
+            .id(3L)
+            .itemId(1L)
+            .reviewerEmail("test@ucsb.edu")
+            .stars(5)
+            .dateReviewed(LocalDateTime.parse("2026-10-21T14:00:00"))
+            .comments("Good food")
+            .build();
+
+    when(menuItemReviewRepository.findById(3L)).thenReturn(Optional.of(review));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/MenuItemReview").param("id", "3").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(menuItemReviewRepository, times(1)).findById(3L);
+    verify(menuItemReviewRepository, times(1)).delete(review);
+
+    String expectedJson =
+        mapper.writeValueAsString(java.util.Map.of("message", "record 3 deleted"));
+
+    assertEquals(expectedJson, response.getResponse().getContentAsString());
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_delete_nonexistent_review() throws Exception {
+
+    when(menuItemReviewRepository.findById(123L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(delete("/api/MenuItemReview").param("id", "123").with(csrf()))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.type").value("EntityNotFoundException"))
+        .andExpect(jsonPath("$.message").value("MenuItemReview with id 123 not found"));
+
+    verify(menuItemReviewRepository, times(1)).findById(123L);
+    verify(menuItemReviewRepository, times(0)).deleteById(123L);
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void regular_user_cannot_delete_review() throws Exception {
+
+    mockMvc
+        .perform(delete("/api/MenuItemReview").param("id", "3").with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  public void logged_out_user_cannot_delete_review() throws Exception {
+
+    mockMvc
+        .perform(delete("/api/MenuItemReview").param("id", "3").with(csrf()))
+        .andExpect(status().isForbidden());
+  }
 }
