@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArticlesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">team01</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.example.controllers</a> &gt; <span class="el_source">ArticlesController.java</span></div><h1>ArticlesController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.example.controllers;
 
 import edu.ucsb.cs156.example.entities.Articles;
+import edu.ucsb.cs156.example.errors.EntityNotFoundException;
 import edu.ucsb.cs156.example.repositories.ArticlesRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,8 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;Articles&quot;)
 @RequestMapping(&quot;/api/Articles&quot;)
 @RestController
-<span class="fc" id="L23">@Slf4j</span>
-<span class="fc" id="L24">public class ArticlesController extends ApiController {</span>
+<span class="fc" id="L24">@Slf4j</span>
+<span class="fc" id="L25">public class ArticlesController extends ApiController {</span>
 
   @Autowired ArticlesRepository articlesRepository;
 
@@ -34,8 +35,32 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;/all&quot;)
   public Iterable&lt;Articles&gt; allArticles() {
-<span class="fc" id="L37">    Iterable&lt;Articles&gt; articles = articlesRepository.findAll();</span>
-<span class="fc" id="L38">    return articles;</span>
+<span class="fc" id="L38">    Iterable&lt;Articles&gt; articles = articlesRepository.findAll();</span>
+<span class="fc" id="L39">    return articles;</span>
+  }
+
+  /**
+   * Get a single article by id.
+   *
+   * @param id the id of the article
+   * @return the article with the given id
+   * @throws EntityNotFoundException if no article has the given id
+   */
+  @Operation(
+      summary = &quot;Get a single article by id&quot;,
+      description = &quot;Returns the article with the given id, or HTTP 404 if it does not exist.&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;&quot;)
+  public Articles getById(
+      @Parameter(name = &quot;id&quot;, description = &quot;ID of the article to retrieve&quot;, example = &quot;123&quot;)
+          @RequestParam
+          Long id) {
+<span class="fc" id="L58">    Articles articles =</span>
+        articlesRepository
+<span class="fc" id="L60">            .findById(id)</span>
+<span class="fc" id="L61">            .orElseThrow(() -&gt; new EntityNotFoundException(Articles.class, id));</span>
+
+<span class="fc" id="L63">    return articles;</span>
   }
 
   /**
@@ -66,16 +91,16 @@ import org.springframework.web.bind.annotation.RestController;
           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime dateAdded) {
 
-<span class="fc" id="L69">    Articles articles = new Articles();</span>
-<span class="fc" id="L70">    articles.setTitle(title);</span>
-<span class="fc" id="L71">    articles.setUrl(url);</span>
-<span class="fc" id="L72">    articles.setExplanation(explanation);</span>
-<span class="fc" id="L73">    articles.setEmail(email);</span>
-<span class="fc" id="L74">    articles.setDateAdded(dateAdded);</span>
+<span class="fc" id="L94">    Articles articles = new Articles();</span>
+<span class="fc" id="L95">    articles.setTitle(title);</span>
+<span class="fc" id="L96">    articles.setUrl(url);</span>
+<span class="fc" id="L97">    articles.setExplanation(explanation);</span>
+<span class="fc" id="L98">    articles.setEmail(email);</span>
+<span class="fc" id="L99">    articles.setDateAdded(dateAdded);</span>
 
-<span class="fc" id="L76">    Articles savedArticles = articlesRepository.save(articles);</span>
+<span class="fc" id="L101">    Articles savedArticles = articlesRepository.save(articles);</span>
 
-<span class="fc" id="L78">    return savedArticles;</span>
+<span class="fc" id="L103">    return savedArticles;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
