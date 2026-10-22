@@ -126,13 +126,13 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;&quot;)
   public Object deleteUCSBDiningCommonsMenuItem(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="nc" id="L129">    UCSBDiningCommonsMenuItem item =</span>
+<span class="fc" id="L129">    UCSBDiningCommonsMenuItem item =</span>
         ucsbDiningCommonsMenuItemRepository
-<span class="nc" id="L131">            .findById(id)</span>
-<span class="nc" id="L132">            .orElseThrow(() -&gt; new EntityNotFoundException(UCSBDiningCommonsMenuItem.class, id));</span>
+<span class="fc" id="L131">            .findById(id)</span>
+<span class="fc" id="L132">            .orElseThrow(() -&gt; new EntityNotFoundException(UCSBDiningCommonsMenuItem.class, id));</span>
 
-<span class="nc" id="L134">    ucsbDiningCommonsMenuItemRepository.delete(item);</span>
-<span class="nc" id="L135">    return genericMessage(&quot;UCSBDiningCommonsMenuItem with id %s deleted&quot;.formatted(id));</span>
+<span class="fc" id="L134">    ucsbDiningCommonsMenuItemRepository.delete(item);</span>
+<span class="fc" id="L135">    return genericMessage(&quot;UCSBDiningCommonsMenuItem with id %s deleted&quot;.formatted(id));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
