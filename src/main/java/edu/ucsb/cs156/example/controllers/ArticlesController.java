@@ -6,6 +6,7 @@ import edu.ucsb.cs156.example.repositories.ArticlesRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -101,5 +104,44 @@ public class ArticlesController extends ApiController {
     Articles savedArticles = articlesRepository.save(articles);
 
     return savedArticles;
+  }
+
+  /**
+   * Update a single article. Accessible only to administrators.
+   *
+   * @param id the id of the article to update
+   * @param incoming the new values for the article fields
+   * @return the updated article
+   * @throws EntityNotFoundException if no article has the given id
+   */
+  @Operation(
+      summary = "Update a single article",
+      description =
+          "Updates title, url, explanation, email, and dateAdded from the JSON body. "
+              + "The id is preserved; any id in the body is ignored. "
+              + "Use ISO format for dateAdded, e.g. 2026-10-21T12:00:00. "
+              + "Returns HTTP 404 if the article does not exist. Requires an administrator.")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PutMapping("")
+  public Articles updateArticles(
+      @Parameter(name = "id", description = "ID of the article to update", example = "123")
+          @RequestParam
+          Long id,
+      @RequestBody @Valid Articles incoming) {
+
+    Articles articles =
+        articlesRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(Articles.class, id));
+
+    articles.setTitle(incoming.getTitle());
+    articles.setUrl(incoming.getUrl());
+    articles.setExplanation(incoming.getExplanation());
+    articles.setEmail(incoming.getEmail());
+    articles.setDateAdded(incoming.getDateAdded());
+
+    articlesRepository.save(articles);
+
+    return articles;
   }
 }
