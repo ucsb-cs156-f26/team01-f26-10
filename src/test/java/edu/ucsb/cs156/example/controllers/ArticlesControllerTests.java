@@ -144,6 +144,78 @@ public class ArticlesControllerTests extends ControllerTestCase {
         .andExpect(status().is(403));
   }
 
+  // Tests for DELETE /api/Articles?id=123
+
+  @Test
+  public void logged_out_users_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/Articles").param("id", "123").with(csrf()))
+        .andExpect(status().is(403));
+
+    verify(articlesRepository, never()).delete(any());
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_regular_users_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/Articles").param("id", "123").with(csrf()))
+        .andExpect(status().is(403));
+
+    verify(articlesRepository, never()).delete(any());
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_delete_an_existing_article() throws Exception {
+    // arrange
+    Articles article =
+        Articles.builder()
+            .id(123L)
+            .title("Testing Spring applications")
+            .url("https://example.com/spring-testing")
+            .explanation("An introduction to Spring testing")
+            .email("student@ucsb.edu")
+            .dateAdded(LocalDateTime.parse("2026-10-21T12:00:00"))
+            .build();
+
+    when(articlesRepository.findById(eq(123L))).thenReturn(Optional.of(article));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/Articles").param("id", "123").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(articlesRepository, times(1)).findById(eq(123L));
+    verify(articlesRepository, times(1)).delete(eq(article));
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("record 123 deleted", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_delete_an_article_that_does_not_exist() throws Exception {
+    // arrange
+    when(articlesRepository.findById(eq(123L))).thenReturn(Optional.empty());
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/Articles").param("id", "123").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+    verify(articlesRepository, times(1)).findById(eq(123L));
+    verify(articlesRepository, never()).delete(any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Articles with id 123 not found", json.get("message"));
+  }
+
   // Tests for PUT /api/Articles?id=123
 
   @Test
