@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -144,6 +145,56 @@ public class HelpRequestControllerTests extends ControllerTestCase {
     verify(helpRequestRepository, times(1)).save(eq(edited));
 
     assertEquals(mapper.writeValueAsString(edited), response.getResponse().getContentAsString());
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_delete_existing_help_request() throws Exception {
+
+    HelpRequest helpRequest =
+        HelpRequest.builder()
+            .id(15L)
+            .requesterEmail("student@ucsb.edu")
+            .teamId("f26-10")
+            .tableOrBreakoutRoom("5")
+            .requestTime(LocalDateTime.parse("2026-10-22T17:00:00"))
+            .explanation("Testing DELETE endpoint")
+            .solved(false)
+            .build();
+
+    when(helpRequestRepository.findById(eq(15L))).thenReturn(Optional.of(helpRequest));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/helprequests").param("id", "15").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(helpRequestRepository, times(1)).findById(eq(15L));
+    verify(helpRequestRepository, times(1)).delete(eq(helpRequest));
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("HelpRequest with id 15 deleted", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_cannot_delete_nonexistent_help_request() throws Exception {
+
+    when(helpRequestRepository.findById(eq(15L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/helprequests").param("id", "15").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(helpRequestRepository, times(1)).findById(eq(15L));
+    verify(helpRequestRepository, never()).delete(any(HelpRequest.class));
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("HelpRequest with id 15 not found", json.get("message"));
   }
 
   @WithMockUser(roles = {"ADMIN"})
