@@ -6,6 +6,7 @@ import edu.ucsb.cs156.example.repositories.HelpRequestRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -77,5 +80,35 @@ public class HelpRequestController extends ApiController {
     request.setSolved(solved);
 
     return helpRequestRepository.save(request);
+  }
+
+  /**
+   * Update a single HelpRequest.
+   *
+   * @param id the ID of the HelpRequest to update
+   * @param incoming the updated HelpRequest data
+   * @return the updated HelpRequest
+   */
+  @Operation(summary = "Update a single help request")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PutMapping("")
+  public HelpRequest updateHelpRequest(
+      @Parameter(name = "id") @RequestParam Long id, @RequestBody @Valid HelpRequest incoming) {
+
+    HelpRequest helpRequest =
+        helpRequestRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(HelpRequest.class, id));
+
+    helpRequest.setRequesterEmail(incoming.getRequesterEmail());
+    helpRequest.setTeamId(incoming.getTeamId());
+    helpRequest.setTableOrBreakoutRoom(incoming.getTableOrBreakoutRoom());
+    helpRequest.setRequestTime(incoming.getRequestTime());
+    helpRequest.setExplanation(incoming.getExplanation());
+    helpRequest.setSolved(incoming.isSolved());
+
+    helpRequestRepository.save(helpRequest);
+
+    return helpRequest;
   }
 }
