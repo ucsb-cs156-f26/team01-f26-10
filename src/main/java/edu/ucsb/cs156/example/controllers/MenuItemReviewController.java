@@ -6,6 +6,7 @@ import edu.ucsb.cs156.example.repositories.MenuItemReviewRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -73,5 +76,31 @@ public class MenuItemReviewController extends ApiController {
     }
 
     return review.get();
+  }
+
+  @Operation(
+      summary = "Update a menu item review by id",
+      description =
+          "Find a review by id and update its fields using JSON. Returns 404 if the review does not exist.")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PutMapping("")
+  public MenuItemReview updateMenuItemReview(
+      @Parameter(name = "id", description = "ID of the review to update") @RequestParam Long id,
+      @RequestBody @Valid MenuItemReview incoming) {
+
+    MenuItemReview review =
+        menuItemReviewRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(MenuItemReview.class, id));
+
+    review.setItemId(incoming.getItemId());
+    review.setReviewerEmail(incoming.getReviewerEmail());
+    review.setStars(incoming.getStars());
+    review.setDateReviewed(incoming.getDateReviewed());
+    review.setComments(incoming.getComments());
+
+    menuItemReviewRepository.save(review);
+
+    return review;
   }
 }

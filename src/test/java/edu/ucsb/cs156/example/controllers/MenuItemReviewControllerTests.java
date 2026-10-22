@@ -21,6 +21,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
@@ -196,6 +197,91 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.type").value("EntityNotFoundException"))
         .andExpect(jsonPath("$.message").value("MenuItemReview with id 123 not found"));
+    verify(menuItemReviewRepository, times(1)).findById(123L);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_edit_existing_review() throws Exception {
+
+    MenuItemReview original =
+        MenuItemReview.builder()
+            .id(3L)
+            .itemId(1L)
+            .reviewerEmail("test@ucsb.edu")
+            .stars(5)
+            .dateReviewed(LocalDateTime.parse("2026-10-21T14:00:00"))
+            .comments("Good food")
+            .build();
+
+    MenuItemReview incoming =
+        MenuItemReview.builder()
+            .id(999L)
+            .itemId(2L)
+            .reviewerEmail("new@ucsb.edu")
+            .stars(4)
+            .dateReviewed(LocalDateTime.parse("2026-10-21T18:00:00"))
+            .comments("Updated review")
+            .build();
+
+    MenuItemReview expected =
+        MenuItemReview.builder()
+            .id(3L)
+            .itemId(2L)
+            .reviewerEmail("new@ucsb.edu")
+            .stars(4)
+            .dateReviewed(LocalDateTime.parse("2026-10-21T18:00:00"))
+            .comments("Updated review")
+            .build();
+
+    when(menuItemReviewRepository.findById(3L)).thenReturn(Optional.of(original));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/MenuItemReview")
+                    .param("id", "3")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsString(incoming))
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(menuItemReviewRepository, times(1)).findById(3L);
+    verify(menuItemReviewRepository, times(1)).save(expected);
+
+    String expectedJson = mapper.writeValueAsString(expected);
+    String actualJson = response.getResponse().getContentAsString();
+
+    assertEquals(expectedJson, actualJson);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_edit_nonexistent_review() throws Exception {
+
+    MenuItemReview incoming =
+        MenuItemReview.builder()
+            .itemId(1L)
+            .reviewerEmail("test@ucsb.edu")
+            .stars(4)
+            .dateReviewed(LocalDateTime.parse("2026-10-21T18:00:00"))
+            .comments("Updated review")
+            .build();
+
+    when(menuItemReviewRepository.findById(123L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            put("/api/MenuItemReview")
+                .param("id", "123")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(incoming))
+                .with(csrf()))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.type").value("EntityNotFoundException"))
+        .andExpect(jsonPath("$.message").value("MenuItemReview with id 123 not found"));
+
     verify(menuItemReviewRepository, times(1)).findById(123L);
   }
 }
