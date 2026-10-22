@@ -1,11 +1,13 @@
 package edu.ucsb.cs156.example.controllers;
 
 import edu.ucsb.cs156.example.entities.MenuItemReview;
+import edu.ucsb.cs156.example.errors.EntityNotFoundException;
 import edu.ucsb.cs156.example.repositories.MenuItemReviewRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -57,5 +59,19 @@ public class MenuItemReviewController extends ApiController {
     MenuItemReview savedReview = menuItemReviewRepository.save(review);
 
     return savedReview;
+  }
+
+  @Operation(summary = "Get a menu item review by id")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  @GetMapping("")
+  public MenuItemReview getMenuItemReviewById(@RequestParam Long id) {
+
+    Optional<MenuItemReview> review = menuItemReviewRepository.findById(id);
+
+    if (review.isEmpty()) {
+      throw new EntityNotFoundException(MenuItemReview.class, id);
+    }
+
+    return review.get();
   }
 }
