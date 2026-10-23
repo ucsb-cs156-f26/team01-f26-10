@@ -1,6 +1,6 @@
 # team01-f26-10
 
-Instructions: <https://ucsb-cs156.github.io/s26/lab/team01.html>
+Instructions: <https://ucsb-cs156.github.io/f26/lab/team01.html>
 
 
 TODO: Add a link to the deployed Dokku app for your team here, e.g.
